@@ -129,6 +129,14 @@ $operator = $_SESSION['operator'];
         if (!timers[idx]) return;
         clearInterval(timers[idx]);
         timers[idx] = null;
+
+        // Hitung durasi
+        let durationMs = Date.now() - startTimes[idx];
+        let totalSeconds = Math.floor(durationMs / 1000);
+        let jam = Math.floor(totalSeconds / 3600);
+        let menit = Math.floor((totalSeconds % 3600) / 60);
+        let detik = totalSeconds % 60;
+
         startTimes[idx] = null;
         elapsed[idx] = 0;
         let nyalaBtn = document.getElementById('nyala-' + idx);
@@ -137,11 +145,11 @@ $operator = $_SESSION['operator'];
             nyalaBtn.disabled = false;
             matiBtn.disabled = true;
         }
-        // Kirim ke backend dengan durasi 0
+        // Kirim ke backend dengan durasi yang benar
         fetch('save_duration.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `lampu=${idx}&jam=0&menit=0&detik=0`
+            body: `lampu=${idx}&jam=${jam}&menit=${menit}&detik=${detik}`
         }).then(() => window.location.reload());
     }
     </script>
