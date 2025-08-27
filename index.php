@@ -26,6 +26,31 @@ $operator = $_SESSION['operator'];
 <body>
 <?php include 'menu.php'; ?>
     <h1>Monitoring Beban Listrik</h1>
+    
+    <?php
+    // Tampilkan status Google Sheets integration
+    $googleSheetsStatus = 'disabled';
+    $statusMessage = '';
+    
+    if (file_exists('credentials.json') && file_exists('vendor/autoload.php')) {
+        try {
+            require_once 'vendor/autoload.php';
+            $googleSheetsStatus = 'enabled';
+            $statusMessage = '✅ Google Sheets Integration Aktif - Data akan tersimpan ke spreadsheet online';
+        } catch (Exception $e) {
+            $statusMessage = '⚠️ Google Sheets Integration Error: ' . $e->getMessage();
+        }
+    } else {
+        $statusMessage = '⚠️ Google Sheets Integration Belum Setup - Data hanya tersimpan lokal';
+    }
+    ?>
+    
+    <div style="background: #f0f8ff; border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px;">
+        <strong>Status:</strong> <?php echo $statusMessage; ?>
+        <?php if ($googleSheetsStatus === 'disabled'): ?>
+            <br><small><a href="setup_google_sheets.md" target="_blank">📖 Lihat panduan setup Google Sheets</a></small>
+        <?php endif; ?>
+    </div>
     <div id="forms-container">
         <!-- Form Lampu 1-8 -->
         <?php for ($i = 1; $i <= 8; $i++): ?>
@@ -38,13 +63,13 @@ $operator = $_SESSION['operator'];
         <?php endfor; ?>
     </div>
     <h2>Input Energi Harian Mesin</h2>
-    <form method="post" action="save_energi.php" style="display:inline-block;margin-right:30px;">
+    <form method="post" action="save_energi_google.php" style="display:inline-block;margin-right:30px;">
         <input type="hidden" name="mesin" value="1">
         <label>Mesin 1: </label>
         <input type="number" name="energi" step="0.01" min="0" required style="width:100px;"> kWh
         <button type="submit">Submit</button>
     </form>
-    <form method="post" action="save_energi.php" style="display:inline-block;">
+    <form method="post" action="save_energi_google.php" style="display:inline-block;">
         <input type="hidden" name="mesin" value="2">
         <label>Mesin 2: </label>
         <input type="number" name="energi" step="0.01" min="0" required style="width:100px;"> kWh
@@ -146,7 +171,7 @@ $operator = $_SESSION['operator'];
             matiBtn.disabled = true;
         }
         // Kirim ke backend dengan durasi yang benar
-        fetch('save_duration.php', {
+        fetch('save_duration_google.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `lampu=${idx}&jam=${jam}&menit=${menit}&detik=${detik}`
