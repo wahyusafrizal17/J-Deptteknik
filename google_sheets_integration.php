@@ -21,23 +21,48 @@ class GoogleSheetsIntegration {
         return new Google_Service_Sheets($client);
     }
     
-    // Simpan data durasi lampu ke Google Sheets
-    public function saveDuration($lampu, $jam, $menit, $detik, $waktuCatat) {
-        $range = 'Durasi Lampu!A:E';
-        $values = [[
-            $lampu,
-            $jam,
-            $menit,
-            $detik,
-            $waktuCatat
-        ]];
+    // Simpan data durasi lampu ke Google Sheets (semua lampu dalam 1 sheet, kolom terpisah)
+    public function saveDuration($lampu, $tanggal, $waktuDinyalakan, $waktuDimatikan, $waktuPenggunaan) {
+        // Semua lampu dalam sheet "New Durasi Lampu"
+        $sheetName = 'New Durasi Lampu';
+        
+        // Hitung kolom berdasarkan nomor lampu
+        // Lampu 1: A-D, Lampu 2: F-H (skip E), Lampu 3: J-L (skip I), dst
+        // Pola: kolom awal = (lampu-1) * 4
+        $startCol = ($lampu - 1) * 4;
+        $columnLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 
+                         'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF'];
+        
+        // Lampu 1: A-D (Tanggal, Waktu Dinyalakan, Waktu Dimatikan, Durasi Penggunaan)
+        // Lampu 2: F-H (Waktu Dinyalakan, Waktu Dimatikan, Durasi Penggunaan) - tanpa Tanggal
+        
+        if ($lampu == 1) {
+            // Lampu 1 dengan kolom Tanggal
+            $range = $sheetName . '!' . $columnLetters[$startCol] . ':' . $columnLetters[$startCol + 3];
+            $values = [[
+                $tanggal,
+                $waktuDinyalakan,
+                $waktuDimatikan,
+                $waktuPenggunaan
+            ]];
+        } else {
+            // Lampu 2-8 tanpa kolom Tanggal, mulai dari kolom yang sesuai
+            // Lampu 2: F-H (index 5-7)
+            $colStart = ($lampu - 1) * 4 + 1; // Skip 1 kolom kosong
+            $range = $sheetName . '!' . $columnLetters[$colStart] . ':' . $columnLetters[$colStart + 2];
+            $values = [[
+                $waktuDinyalakan,
+                $waktuDimatikan,
+                $waktuPenggunaan
+            ]];
+        }
         
         $body = new Google_Service_Sheets_ValueRange([
             'values' => $values
         ]);
         
         $params = [
-            'valueInputOption' => 'RAW'
+            'valueInputOption' => 'USER_ENTERED' // Agar format waktu otomatis terdeteksi
         ];
         
         try {

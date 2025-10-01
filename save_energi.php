@@ -1,5 +1,6 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    date_default_timezone_set('Asia/Jakarta'); // Set timezone ke WIB
     $mesin = isset($_POST['mesin']) ? intval($_POST['mesin']) : 0;
     $energi = isset($_POST['energi']) ? floatval($_POST['energi']) : 0;
     $tanggal = date('Y-m-d');

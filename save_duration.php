@@ -1,5 +1,6 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    date_default_timezone_set('Asia/Jakarta'); // Set timezone ke WIB
     $lampu = isset($_POST['lampu']) ? intval($_POST['lampu']) : 0;
     $jam = isset($_POST['jam']) ? intval($_POST['jam']) : 0;
     $menit = isset($_POST['menit']) ? intval($_POST['menit']) : 0;

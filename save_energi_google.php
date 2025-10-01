@@ -8,6 +8,7 @@ if (!isset($_SESSION['operator'])) {
 require_once 'google_sheets_integration.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    date_default_timezone_set('Asia/Jakarta'); // Set timezone ke WIB
     $mesin = $_POST['mesin'] ?? '';
     $energi = $_POST['energi'] ?? '';
     $tanggal = date('Y-m-d');

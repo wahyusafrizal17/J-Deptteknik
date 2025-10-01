@@ -162,6 +162,11 @@ $operator = $_SESSION['operator'];
         let menit = Math.floor((totalSeconds % 3600) / 60);
         let detik = totalSeconds % 60;
 
+        // Format waktu dinyalakan dan dimatikan
+        let waktuDinyalakan = formatDateTime(new Date(startTimes[idx]));
+        let waktuDimatikan = formatDateTime(new Date());
+        let waktuPenggunaan = `${pad(jam)}:${pad(menit)}:${pad(detik)}`;
+
         startTimes[idx] = null;
         elapsed[idx] = 0;
         let nyalaBtn = document.getElementById('nyala-' + idx);
@@ -170,12 +175,65 @@ $operator = $_SESSION['operator'];
             nyalaBtn.disabled = false;
             matiBtn.disabled = true;
         }
-        // Kirim ke backend dengan durasi yang benar
+        // Kirim ke backend dengan waktu lengkap
         fetch('save_duration_google.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `lampu=${idx}&jam=${jam}&menit=${menit}&detik=${detik}`
-        }).then(() => window.location.reload());
+            body: `lampu=${idx}&waktu_dinyalakan=${encodeURIComponent(waktuDinyalakan)}&waktu_dimatikan=${encodeURIComponent(waktuDimatikan)}&waktu_penggunaan=${encodeURIComponent(waktuPenggunaan)}&jam=${jam}&menit=${menit}&detik=${detik}`
+        }).then(response => {
+            if (response.ok) {
+                console.log('Data lampu', idx, 'berhasil disimpan');
+                // Tambahkan baris baru ke tabel secara dinamis
+                updateTable(idx, jam, menit, detik);
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function formatDateTime(date) {
+        let year = date.getFullYear();
+        let month = String(date.getMonth() + 1).padStart(2, '0');
+        let day = String(date.getDate()).padStart(2, '0');
+        let hours = String(date.getHours()).padStart(2, '0');
+        let minutes = String(date.getMinutes()).padStart(2, '0');
+        let seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
+    function updateTable(lampu, jam, menit, detik) {
+        // Ambil waktu saat ini dalam format WIB
+        let now = new Date();
+        let waktuCatat = now.getFullYear() + '-' + 
+                        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(now.getDate()).padStart(2, '0') + ' ' + 
+                        String(now.getHours()).padStart(2, '0') + ':' + 
+                        String(now.getMinutes()).padStart(2, '0') + ':' + 
+                        String(now.getSeconds()).padStart(2, '0');
+        
+        // Cari tabel durasi
+        let tables = document.querySelectorAll('table');
+        let durasiTable = tables[1]; // Tabel kedua adalah durasi
+        
+        if (durasiTable) {
+            // Tambahkan baris baru di bawah header
+            let tbody = durasiTable.querySelector('tbody') || durasiTable;
+            let headerRow = tbody.querySelector('tr');
+            let newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${lampu}</td>
+                <td>${jam}</td>
+                <td>${menit}</td>
+                <td>${detik}</td>
+                <td>${waktuCatat}</td>
+            `;
+            // Insert setelah header
+            if (headerRow && headerRow.nextSibling) {
+                tbody.insertBefore(newRow, headerRow.nextSibling);
+            } else {
+                tbody.appendChild(newRow);
+            }
+        }
     }
     </script>
 </body>
